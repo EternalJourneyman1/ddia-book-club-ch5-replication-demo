@@ -1,0 +1,40 @@
+services:
+  leader:
+    image: redis:7.4-alpine
+    container_name: replication-demo-leader
+
+  replica:
+    image: redis:7.4-alpine
+    container_name: replication-demo-replica
+
+  api:
+    build: .
+    container_name: replication-demo-api
+    command: ["node", "src/server.js"]
+    environment:
+      PORT: ${PORT:-3001}
+      LEADER_URL: redis://leader:6379
+      REPLICA_URL: redis://replica:6379
+      REPLICATION_DELAY_SECONDS: ${REPLICATION_DELAY_SECONDS:-120}
+    ports:
+      - "${HOST_PORT:-3001}:${PORT:-3001}"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:${PORT:-3001}/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    depends_on:
+      - leader
+      - replica
+
+  replicator:
+    build: .
+    container_name: replication-demo-replicator
+    command: ["node", "src/replicator.js"]
+    environment:
+      LEADER_URL: redis://leader:6379
+      REPLICA_URL: redis://replica:6379
+      REPLICATION_DELAY_SECONDS: ${REPLICATION_DELAY_SECONDS:-120}
+    depends_on:
+      - leader
+      - replica

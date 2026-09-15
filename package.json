@@ -1,0 +1,10 @@
+{
+  "name": "ddia-delayed-replication-demo",
+  "private": true,
+  "version": "1.0.0",
+  "description": "A small Docker Compose demo of delayed asynchronous replication",
+  "packageManager": "pnpm@8.7.0",
+  "dependencies": {
+    "redis": "4.7.0"
+  }
+}
